@@ -1,0 +1,26 @@
+fully_multithreadded_rendering:
+    First investigate how channels work in rust, the ideal thing would be to have {X} command buffers
+    ready and then send ( VertexBuffer, set (contains image data) ) over the channel and make it pick
+    up the first command_buffer thread that is available. VertexBuffer needs to be sent because is 
+    dynamically generated from the Rect of texture, i MIGHT be able to cache the set for redraws,
+    but that's simply out of scope for right now. The rest probably should just continue to be .clone()'d
+    from VkSession since they dynamically change when swapchain is recreated and probably will be more 
+    often in the future.
+
+    -- No wait, I can invoke multiple .draw() in one command buffer --
+
+    The more proper way to do it would be to send a bunch of image data and vertex buffer to command buffer
+    threads as mentioned before, but then have it wait for a second channel (wait how i do that in rust
+    without select{}?) 
+    where it waits for a zircon::internal::Present() call (for each command_buffer_thread). And then appends
+    the textures as draw calls between the begin_render_pass and end_render_pass.
+    One of them has to first do a clear call. Wait that's actually a really bad issue isn't it? I
+    think the only good thing i can do here is have an entire seperate command buffer for clear calls...
+    Quite stupid but it's be to hard to sync otherwise (this is multithreadding afterall).
+
+    -- Ok i should probably only have 1 command buffer --  
+    
+    doing a whole lot of .draw() calls with only one. This will also solve the sync issue of clear().
+    HOWEVER I should still create many threads for creating all the data the command_buffer needs, otherwise
+    it won't be fully multithreadded. Such as building the set. I need to figure out a way to multithreadd 
+    ImmutableImage::from_iter(). 

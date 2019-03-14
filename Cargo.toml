@@ -1,0 +1,12 @@
+[package]
+name = "zircon"
+version = "0.1.0"
+authors = ["Simon <simon.larsson-general@protonmail.com>"]
+edition = "2018"
+
+[dependencies]
+vulkano = '*'
+vulkano-win = '*'
+vulkano-shaders = '*'
+winit  = '*'
+image = "*"
